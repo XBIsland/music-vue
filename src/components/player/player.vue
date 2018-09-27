@@ -31,8 +31,8 @@
             <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left">
               <i @click="prev" class="icon-prev"></i>
@@ -74,19 +74,22 @@
       </div>
     </transition>
     <audio ref="audio" :src="currentSong.url" @canplay="ready"
-            @error="error" @timeupdate="updateTime"></audio>
+            @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
 import ProgressBar from 'base/progress-bar/progress-bar'
+import { playMode } from 'common/js/config'
+import { shuffle } from 'common/js/utiliy'
 
 export default {
   data () {
     return {
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      minipercent: 0
     }
   },
   computed: {
@@ -95,6 +98,9 @@ export default {
     },
     playIcon () {
       return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    iconMode () {
+      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
     },
     miniIcon () {
       return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
@@ -107,7 +113,9 @@ export default {
       'playList',
       'currentSong',
       'playing',
-      'currentIndex'
+      'currentIndex',
+      'mode',
+      'sequenceList'
     ]),
     imageOne () {
       return this.currentSong.image ? this.currentSong.image : ''
@@ -154,6 +162,19 @@ export default {
       }
       this.songReady = false
     },
+    loop () {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+    },
+    // audio播放结束触发ended事件,利用这个事件来搞自动下一首
+    end () {
+      // 判断当前播放模式是否为单曲循环
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
     // 限制快速点击时的报错，只有当songReady为true，才能点击
     ready () {
       this.songReady = true
@@ -165,6 +186,7 @@ export default {
     // 获取音频播放时间进度
     updateTime (e) {
       this.currentTime = e.target.currentTime
+      this.minipercent = this.percent
     },
     // 将获得的时间戳转换为分秒
     format (interval) {
@@ -185,18 +207,45 @@ export default {
     },
     // 改变mini播放器进度条
     _miniProgressBar (newP) {
-      const miniWidth = this.$refs.miniPlayer.clientWidth
+      // miniWidth为页面视口宽度
+      const miniWidth = window.innerWidth
       const offsetWidth = miniWidth * newP
       this.$refs.progressMiniBar.style.width = `${offsetWidth}px`
+    },
+    // 改变Mode播放模式
+    changeMode () {
+      const mode = (this.mode + 1) % 3
+      this.setPlayMode(mode)
+      let list = null
+      // 洗牌函数
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList)
+      } else {
+        list = this.sequenceList
+      }
+      this.resetCurrentIndex(list)
+      this.setPlayList(list)
+    },
+    // 改成random模式，同步修改currentIndex，保证歌曲不变
+    resetCurrentIndex (list, song) {
+      let index = list.findIndex((item) => {
+        return item.id === this.currentSong.id
+      })
+      this.setCurrentIndex(index)
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAYLIST'
     })
   },
   watch: {
-    currentSong () {
+    currentSong (newSong, oldSong) {
+      if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
+        return
+      }
       this.$nextTick(() => {
         this.$refs.audio.play()
       })
@@ -207,8 +256,10 @@ export default {
         newPlaying ? _audio.play() : _audio.pause()
       })
     },
-    percent (newP) {
-      this._miniProgressBar(newP)
+    minipercent (newP) {
+      if (newP) {
+        this._miniProgressBar(newP)
+      }
     }
   },
   components: {

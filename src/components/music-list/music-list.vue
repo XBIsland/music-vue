@@ -6,7 +6,7 @@
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="play-wrapper">
-        <div class="play" v-show="songs.length > 0" ref="playBtn">
+        <div class="play" v-show="songs.length > 0" ref="playBtn" @click="random">
           <i class="icon-play"></i>
         </div>
       </div>
@@ -74,12 +74,18 @@ export default {
     selectItem (item, index) {
       this.selectPlay({
         list: this.songs,
-        index: index
+        index
       })
-      // console.log(index)
+      // console.log(this.songs)
+    },
+    random () {
+      this.randomPlay({
+        list: this.songs
+      })
     },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   },
   watch: {
