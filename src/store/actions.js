@@ -14,6 +14,7 @@ export const selectPlay = function ({commit, state}, {list, index}) {
     let randomList = shuffle(list)
     commit(types.SET_PLAYLIST, randomList)
     index = findIndex(randomList, list[index])
+    // console.log(index)
   } else {
     commit(types.SET_PLAYLIST, list)
   }

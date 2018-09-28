@@ -83,16 +83,27 @@ import { mapGetters, mapMutations } from 'vuex'
 import ProgressBar from 'base/progress-bar/progress-bar'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/utiliy'
+import Lyric from 'lyric-parser'
 
 export default {
   data () {
     return {
       songReady: false,
       currentTime: 0,
-      minipercent: 0
+      minipercent: 0,
+      currentLyric: null
     }
   },
   computed: {
+    ...mapGetters([
+      'fullScreen',
+      'playList',
+      'currentSong',
+      'playing',
+      'currentIndex',
+      'mode',
+      'sequenceList'
+    ]),
     cdCls () {
       return this.playing ? 'play' : 'play pause'
     },
@@ -108,15 +119,6 @@ export default {
     percent () {
       return this.currentTime / this.currentSong.duration
     },
-    ...mapGetters([
-      'fullScreen',
-      'playList',
-      'currentSong',
-      'playing',
-      'currentIndex',
-      'mode',
-      'sequenceList'
-    ]),
     imageOne () {
       return this.currentSong.image ? this.currentSong.image : ''
     }
@@ -233,6 +235,12 @@ export default {
       })
       this.setCurrentIndex(index)
     },
+    getLyric () {
+      this.currentSong.getLyric().then((lyric) => {
+        this.currentLyric = new Lyric(lyric)
+        console.log(this.currentLyric)
+      })
+    },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
@@ -248,6 +256,7 @@ export default {
       }
       this.$nextTick(() => {
         this.$refs.audio.play()
+        this.getLyric()
       })
     },
     playing (newPlaying) {

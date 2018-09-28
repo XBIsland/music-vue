@@ -9,7 +9,7 @@ import { mapGetters } from 'vuex'
 import { getSingerDetail } from 'api/singer'
 import { ERR_OK } from 'api/config'
 // import { createSong, isValidMusic, processSongsUrl } from 'common/js/song'
-import { createSong } from 'common/js/song'
+import { createSong, isValidMusic } from 'common/js/song'
 import MusicList from 'components/music-list/music-list'
 
 export default {
@@ -52,7 +52,7 @@ export default {
       list.forEach((item) => {
         // 解构赋值
         let {musicData} = item
-        if (musicData.songid && musicData.albumid) {
+        if (isValidMusic(musicData)) {
           ret.push(createSong(musicData))
         }
       })
