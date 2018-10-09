@@ -1,6 +1,6 @@
 <template>
-  <div class="singer">
-    <list-view :data="singers" @select="selectSinger"></list-view>
+  <div class="singer" ref="singer">
+    <list-view :data="singers" @select="selectSinger" ref="list"></list-view>
     <router-view></router-view>
   </div>
 </template>
@@ -11,11 +11,13 @@ import { ERR_OK } from 'api/config'
 import ListView from 'base/listview/listview'
 // vuex提供的语法糖，将mutations映射到当前组件
 import { mapMutations } from 'vuex'
+import { playlistMixin } from 'common/js/mixin'
 
 const HOT_NAME = '热门'
 const HOT_SINGER_LEN = 10
 
 export default {
+  mixins: [playlistMixin],
   data () {
     return {
       singers: []
@@ -28,6 +30,11 @@ export default {
     this._getSingerList()
   },
   methods: {
+    handlePlaylist (playList) {
+      const bottom = playList.length > 0 ? '60px' : ''
+      this.$refs.singer.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     // 路由跳转及设置Vuex的state数据，用于跳转后的歌手详情页
     selectSinger (singer) {
       this.$router.push({

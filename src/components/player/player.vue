@@ -12,14 +12,29 @@
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
-        <div class="middle">
-          <div class="middle-l">
-            <div class="cd-wrapper">
-              <div class="cd" :class="cdCls">
-                <img class="image" :src="this.imageOne">
+        <div class="middle" @click="cdOfLyric">
+          <transition name="midl">
+            <div class="middle-l" v-show="isShowCd">
+              <div class="cd-wrapper">
+                <div class="cd" :class="cdCls">
+                  <img class="image" :src="this.imageOne">
+                </div>
+              </div>
+              <!-- cd页面歌词 -->
+              <div class="playing-lyric-wrapper">
+                <div class="playing-lyric">{{playingLyric}}</div>
               </div>
             </div>
-          </div>
+          </transition>
+          <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p class="text" ref="lyricLine"
+                   :class="{'current': curreentLineNum === index}"
+                   v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
+              </div>
+            </div>
+          </scroll>
         </div>
         <div class="bottom">
           <div class="progress-wrapper">
@@ -73,7 +88,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @canplay="ready"
+    <audio ref="audio" :src="currentSong.url" @play="ready"
             @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
@@ -84,6 +99,7 @@ import ProgressBar from 'base/progress-bar/progress-bar'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/utiliy'
 import Lyric from 'lyric-parser'
+import Scroll from 'base/scroll/scroll'
 
 export default {
   data () {
@@ -91,7 +107,10 @@ export default {
       songReady: false,
       currentTime: 0,
       minipercent: 0,
-      currentLyric: null
+      currentLyric: null,
+      curreentLineNum: 0,
+      isShowCd: true,
+      playingLyric: ''
     }
   },
   computed: {
@@ -135,18 +154,26 @@ export default {
         return
       }
       this.setPlayingState(!this.playing)
+      if (this.currentLyric) {
+        // togglePlay() lyric-parser歌词暂停api
+        this.currentLyric.togglePlay()
+      }
     },
     prev () {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex - 1
-      if (index === -1) {
-        index = this.playList.length - 1
-      }
-      this.setCurrentIndex(index)
-      if (!this.playing) {
-        this.isPlaying()
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playList.length - 1
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.isPlaying()
+        }
       }
       this.songReady = false
     },
@@ -154,19 +181,27 @@ export default {
       if (!this.songReady) {
         return
       }
-      let index = this.currentIndex + 1
-      if (index === this.playList.length) {
-        index = 0
-      }
-      this.setCurrentIndex(index)
-      if (!this.playing) {
-        this.isPlaying()
+      if (this.playList.length === 1) {
+        this.loop()
+      } else {
+        let index = this.currentIndex + 1
+        if (index === this.playList.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.isPlaying()
+        }
       }
       this.songReady = false
     },
     loop () {
       this.$refs.audio.currentTime = 0
       this.$refs.audio.play()
+      if (this.currentLyric) {
+        // lyric-parser api 偏移到歌词一开始
+        this.currentLyric.seek(0)
+      }
     },
     // audio播放结束触发ended事件,利用这个事件来搞自动下一首
     end () {
@@ -202,9 +237,13 @@ export default {
       return num < 10 ? '0' + num : num
     },
     onProgressBarChange (percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      const currentTime = this.currentSong.duration * percent
+      this.$refs.audio.currentTime = currentTime
       if (!this.playing) {
         this.isPlaying()
+      }
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
       }
     },
     // 改变mini播放器进度条
@@ -235,11 +274,38 @@ export default {
       })
       this.setCurrentIndex(index)
     },
-    getLyric () {
-      this.currentSong.getLyric().then((lyric) => {
-        this.currentLyric = new Lyric(lyric)
-        console.log(this.currentLyric)
+    // 利用Lyrci组件处理数据
+    getLyric (mid) {
+      this.currentSong.getLyric(mid).then((lyric) => {
+        // if (this.currentLyric !== lyric) {
+        //   return
+        // }
+        this.currentLyric = new Lyric(lyric, this.handleLyric)
+        // console.log(this.currentLyric)
+        // 当playing为true时 同步播放
+        if (this.playing) {
+          this.currentLyric.play()
+        }
+      }).catch(() => {
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.curreentLineNum = 0
       })
+    },
+    // 操作歌词高亮及自动滚动
+    handleLyric ({lineNum, txt}) {
+      this.curreentLineNum = lineNum
+      if (lineNum > 5) {
+        let lineEl = this.$refs.lyricLine[lineNum - 5]
+        this.$refs.lyricList.scrollToElement(lineEl, 1000)
+      } else {
+        this.$refs.lyricList.scrollTo(0, 0, 1000)
+      }
+      this.playingLyric = txt
+    },
+    // 点击CD切换歌词，控制isShow来展示与否
+    cdOfLyric () {
+      this.isShowCd = !this.isShowCd
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
@@ -251,18 +317,24 @@ export default {
   },
   watch: {
     currentSong (newSong, oldSong) {
-      if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
-        return
+      // console.log(newSong.mid)
+      // if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
+      //   return
+      // }
+      if (this.currentLyric) {
+        this.currentLyric.stop()
       }
-      this.$nextTick(() => {
+      setTimeout(() => {
         this.$refs.audio.play()
-        this.getLyric()
-      })
+        this.getLyric(newSong.mid)
+      }, 1000)
     },
     playing (newPlaying) {
       this.$nextTick(() => {
         const _audio = this.$refs.audio
+        // const _currentLyric = this.currentLyric
         newPlaying ? _audio.play() : _audio.pause()
+        // newPlaying ? _currentLyric.play() : _currentLyric.stop()
       })
     },
     minipercent (newP) {
@@ -272,7 +344,8 @@ export default {
     }
   },
   components: {
-    ProgressBar
+    ProgressBar,
+    Scroll
   }
 }
 </script>
@@ -320,6 +393,7 @@ export default {
         text-align: center
         font-size: $font-size-large
         color: $color-text
+        no-wrap()
       .subtitle
         line-height: 20px
         text-align: center
@@ -363,6 +437,38 @@ export default {
               box-sizing: border-box
               border-radius: 50%
               border: 10px solid rgba(255, 255, 255, .1)
+        &.midl-enter-active, &.midl-leave-active
+          transition: all .2s
+        &.midl-enter, &.midl-leave-to
+          opacity: 0
+        .playing-lyric-wrapper
+          position: absolute
+          bottom: -20%
+          width: 100%
+          overflow: hidden
+          text-align: center
+          .playing-lyric
+            height: 20px
+            line-height: 20px
+            font-size: $font-size-medium
+            color: $color-text-l
+      .middle-r
+        display: inline-block
+        vertical-align: top
+        width: 100%
+        height: 100%
+        overflow: hidden
+        .lyric-wrapper
+          width: 80%
+          margin: 0 auto
+          overflow: hidden
+          text-align: center
+          .text
+            line-height: 32px
+            color: $color-text-l
+            font-size: $font-size-medium
+            &.current
+              color: $color-text
     .bottom
       position: absolute
       bottom: 50px

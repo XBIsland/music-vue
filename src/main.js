@@ -18,6 +18,12 @@ Vue.use(VueLazyload, {
   loading: require('common/image/default.png')
 })
 
+// hack for global nextTick
+// function noop () {
+// }
+// window.MessageChannel = noop
+// window.setImmediate = noop
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

@@ -12,6 +12,8 @@ export const mode = state => state.mode
 
 export const currentIndex = state => state.currentIndex
 
-export const currentSong = function(state) {
+export const currentSong = function (state) {
   return state.playList[state.currentIndex]
 }
+
+export const disc = state => state.disc
