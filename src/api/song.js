@@ -4,7 +4,7 @@ import axios from 'axios'
 import { ERR_OK } from 'api/config'
 
 export function getLyric (mid) {
-  const url = debug ? '/api/lyric' : '172.16.42.88/music/api/lyric'
+  const url = debug ? '/api/lyric' : '47.106.242.21/music/api/lyric'
 
   const data = Object.assign({}, commonParams, {
     songmid: mid,
@@ -24,7 +24,7 @@ export function getLyric (mid) {
 }
 
 export function getSongsUrl (songs) {
-  const url = debug ? '/api/getPurlUrl' : '172.16.42.88/music/api/getPurlUrl'
+  const url = debug ? '/api/getPurlUrl' : '47.106.242.21/music/api/getPurlUrl'
 
   let mids = []
   let types = []
