@@ -2,6 +2,8 @@ import axios from 'axios'
 import jsonp from 'common/js/jsonp'
 import {commonParams, options} from './config'
 
+const debug = process.env.NODE_ENV !== 'production'
+
 export function getRecommend () {
   const url = 'https://c.y.qq.com/musichall/fcgi-bin/fcg_yqqhomepagerecommend.fcg'
 
@@ -16,7 +18,7 @@ export function getRecommend () {
 
 export function getDiscList () {
   // 线上环境
-  const url = debug ? '/api/getDiscList' : '47.106.242.21/music/api/getDiscList'
+  const url = debug ? '/api/getDiscList' : 'http://47.106.242.21/music/api/getDiscList'
 
   const data = Object.assign({}, commonParams, {
     platform: 'yqq',
@@ -38,7 +40,7 @@ export function getDiscList () {
 }
 
 export function getSongList (disstid) {
-  const url = debug ? '/api/getCdInfo' : '47.106.242.21/music/api/getCdInfo'
+  const url = debug ? '/api/getCdInfo' : 'http://47.106.242.21/music/api/getCdInfo'
 
   const data = Object.assign({}, commonParams, {
     disstid,
