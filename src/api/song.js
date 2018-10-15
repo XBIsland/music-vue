@@ -6,7 +6,7 @@ import { ERR_OK } from 'api/config'
 const debug = process.env.NODE_ENV !== 'production'
 
 export function getLyric (mid) {
-  const url = 'http://47.106.242.21/music/api/lyric'
+  const url = '/api/lyric'
 
   const data = Object.assign({}, commonParams, {
     songmid: mid,
@@ -26,7 +26,7 @@ export function getLyric (mid) {
 }
 
 export function getSongsUrl (songs) {
-  const url = 'http://47.106.242.21/music/api/getPurlUrl'
+  const url = 'api/getPurlUrl'
 
   let mids = []
   let types = []
@@ -89,7 +89,7 @@ function genUrlMid(mids, types) {
   const guid = getUid()
   return {
     module: 'vkey.GetVkeyServer',
-    method: "CgiGetVkey",
+    method: 'CgiGetVkey',
     param: {
       guid,
       songmid: mids,

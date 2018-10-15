@@ -17,3 +17,5 @@ export const currentSong = function (state) {
 }
 
 export const disc = state => state.disc
+
+export const toplist = state => state.toplist
