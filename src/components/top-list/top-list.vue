@@ -1,6 +1,6 @@
 <template>
   <transition name="slide">
-    <music-list :title="title" :songs="songs" :bg-image="bgImage"></music-list>
+    <music-list :rank="rank" :title="title" :songs="songs" :bg-image="bgImage"></music-list>
   </transition>
 </template>
 
@@ -14,12 +14,13 @@ import { createSong, isValidMusic, processSongsUrl } from 'common/js/song'
 export default {
   data () {
     return {
-      songs: []
+      songs: [],
+      rank: true
     }
   },
   computed: {
     title () {
-      return this.toplist.toptitle
+      return this.toplist.topTitle
     },
     bgImage () {
       if (this.songs.length) {
@@ -48,7 +49,7 @@ export default {
         }
       })
     },
-    _normalizeSongs(list) {
+    _normalizeSongs (list) {
       let ret = []
       list.forEach((item) => {
         const musicData = item.data

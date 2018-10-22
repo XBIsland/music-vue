@@ -45,7 +45,7 @@ export default {
         }
       })
     },
-    _normalizeSongs(list) {
+    _normalizeSongs (list) {
       let ret = []
       list.forEach((musicData) => {
         if (isValidMusic(musicData)) {

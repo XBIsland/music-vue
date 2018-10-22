@@ -175,14 +175,15 @@ export default {
           this.isPlaying()
         }
       }
-      this.songReady = false
     },
     next () {
+      console.log('1')
       if (!this.songReady) {
         return
       }
       if (this.playList.length === 1) {
         this.loop()
+        return
       } else {
         let index = this.currentIndex + 1
         if (index === this.playList.length) {
@@ -193,7 +194,6 @@ export default {
           this.isPlaying()
         }
       }
-      this.songReady = false
     },
     loop () {
       this.$refs.audio.currentTime = 0
@@ -321,6 +321,7 @@ export default {
       // if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
       //   return
       // }
+      this.songReady = false
       if (this.currentLyric) {
         this.currentLyric.stop()
       }

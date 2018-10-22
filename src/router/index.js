@@ -43,7 +43,11 @@ export default new Router({
     },
     {
       path: '/search',
-      component: Search
+      component: Search,
+      children: [{
+        path: ':id',
+        component: SingerDetail
+      }]
     }]
   // scrollBehavior (to, from, savedPosition) {
   //   return { x: 0, y: 0 }

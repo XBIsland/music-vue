@@ -3,9 +3,11 @@ import { getUid } from 'common/js/uid'
 import axios from 'axios'
 import { ERR_OK } from 'api/config'
 
-const debug = process.env.NODE_ENV !== 'production'
+// const debug = process.env.NODE_ENV !== 'production'
 
 export function getLyric (mid) {
+  // 线上
+  // const url = 'http://47.106.242.21/api/lyric'
   const url = '/api/lyric'
 
   const data = Object.assign({}, commonParams, {
@@ -26,7 +28,9 @@ export function getLyric (mid) {
 }
 
 export function getSongsUrl (songs) {
-  const url = 'api/getPurlUrl'
+  // 线上
+  // const url = 'http://47.106.242.21/api/getPurlUrl'
+  const url = '/api/getPurlUrl'
 
   let mids = []
   let types = []
@@ -85,7 +89,7 @@ export function getSongsUrl (songs) {
   })
 }
 
-function genUrlMid(mids, types) {
+function genUrlMid (mids, types) {
   const guid = getUid()
   return {
     module: 'vkey.GetVkeyServer',
