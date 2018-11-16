@@ -333,9 +333,9 @@ export default {
     playing (newPlaying) {
       this.$nextTick(() => {
         const _audio = this.$refs.audio
-        // const _currentLyric = this.currentLyric
+        const _currentLyric = this.currentLyric
         newPlaying ? _audio.play() : _audio.pause()
-        // newPlaying ? _currentLyric.play() : _currentLyric.stop()
+        newPlaying ? _currentLyric.play() : _currentLyric.stop()
       })
     },
     minipercent (newP) {
